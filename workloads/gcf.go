@@ -38,7 +38,7 @@ func DummyWithErrors() error {
 func Push() error {
 	guid, _ := uuid.NewV4()
 	pathToApp := path.Join("assets", "dora")
-	err := Cf("push", "pats-"+guid.String(), "-m", "64M", "-p", pathToApp).ExpectOutput("App started")
+	err := Cf("push", "pats-"+guid.String(), "-m", "80M", "-p", pathToApp).ExpectOutput("App started")
 	return err
 }
 
