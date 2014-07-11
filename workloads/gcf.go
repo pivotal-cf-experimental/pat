@@ -38,7 +38,14 @@ func DummyWithErrors() error {
 func Push() error {
 	guid, _ := uuid.NewV4()
 	pathToApp := path.Join("assets", "dora")
-	err := Cf("push", "pats-"+guid.String(), "-m", "80M", "-p", pathToApp).ExpectOutput("App started")
+	err := Cf("push", "patD-"+guid.String(), "-m", "80M", "-p", pathToApp).ExpectOutput("App started")
+	return err
+}
+
+func Spring() error {
+	guid, _ := uuid.NewV4()
+	pathToManifest := path.Join("assets", "spring-music", "manifest.yml" ) 
+	err := Cf("push", "patD-"+guid.String(), "-f", pathToManifest).ExpectOutput("App started")
 	return err
 }
 
