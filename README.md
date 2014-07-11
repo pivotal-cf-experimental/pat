@@ -6,28 +6,12 @@ The goal of this project is to create a super-simple load generation/performance
 and easily running load against Cloud Foundry. The tool has both a command line UI, for running quickly during
 a build and a web UI for tracking longer-running tests.
 
-To run PATs, you could download the binary executable we provide, or you could clone and run the repository if you want the latest version of PATs
-
-Download PATs Binary
-==================================
-If you just want to run PATs, you could download our PATs binary file.
-
-Note: It is important that `cf` is accessable on your `$PATH`, and that it has either been symlinked to `gcf` or renamed to `gcf`.
-
-Available Binary:
-- Mac OSx 64bit
-- Linux 64bit
-- Windows 64bit
-
-Goto https://github.com/cloudfoundry-incubator/pat/releases to download
-
-
+This fork is specifically to support performance testing of CF on vSphere. The modifications we've made to get it working introduce some quirks, only some of which are covered here - the particular details of how this should be used are in the test plan this fork was created to support.
 
 Clone and Setting up to run locally
 ==================================
 These steps are to setup this project and have it run locally on your system. This includes a number of
-requirements for Go and the dependent libraries. If you wish to only run this project as a Cloud Foundry
-application, see the instructions on "Running PAT as a Cloud Foundry App" below.
+requirements for Go and the dependent libraries. This fork requires a bit of a git/go hack to get running, or at least I am not clever/leisured enough to make it work without said hack.
 
 1) Ensure that [Go](http://golang.org/) version 1.2.x-64bit has been installed on the system
 
@@ -36,11 +20,12 @@ application, see the instructions on "Running PAT as a Cloud Foundry App" below.
     export GOPATH=~/go
     export PATH=$GOPATH/bin:$PATH
 
-3) Install [gocart] (https://github.com/vito/gocart)
+3) Install [gocart](https://github.com/vito/gocart)
 
     go get github.com/vito/gocart
 
 4) Download PAT and install the necessary dependencies
+
 
     go get github.com/cloudfoundry-incubator/pat
       *(Ignore any warnings about "no buildable Go source files")
@@ -48,18 +33,39 @@ application, see the instructions on "Running PAT as a Cloud Foundry App" below.
     cd $GOPATH/src/github.com/cloudfoundry-incubator/pat
     gocart
 
-5) See [CF CLI] (https://github.com/cloudfoundry/cli) for instructions on installing `cf`
+5) Now the hack: convert your PAT to this fork (you might have to be sort of `--force`ful with the pull if it doesn't work on the first try):
+    
+```
+git remote set-url origin git@github.com:pivotal-cf-experimental/pat
+git pull
+```
 
-Note: It is important that `cf` is accessable on your `$PATH`, and that it has either been symlinked to `gcf` or renamed to `gcf`.
+6) Install the [CF CLI](https://github.com/cloudfoundry/cli). (Follow the link for instructions.)
+
+7) Symlink the cf cli as `gcf` from somewhere on your path. I have to look the syntax up every time, so here's a little reminder:
+`ln -s /path/to/file /path/to/symlink`.
 
 Running PAT
 =================================
 
-## Running Locally
+## Running with the included script
+This fork includes a simple bash script, `set-and-run-PATs.sh`, that handles the `cf` logistics - creating a valid destination, ensuring an adequite quota, and cleaning up after the run. 
 
-If you wish to run PAT as a Cloud Foundry app(work in progress), please refer to the section at the bottom of this page.
+1) It expects a local binary, so after you've done the go setup above, do a `go build`. If you have to tinker with the source code, make sure to `go build` after, which will replace the `pat` binary the script uses. This script - and in fact, this entire tool - is location sensitive. Don't move it, and don't run the script from anywhere but this directory. If you do, it will fail to find its assets and possibly silently spew `output/csvs` directories in your PWD, which is rude.
 
-There are three ways to run PAT locally. For all three ways, you must first:
+2) set PATUSER to "admin" and PATPSWD to the password from the credentials tab of Ops Manager.
+
+3) Make sure your config file is setup for your run. (`local-config.yml` is a good basis to build from.)
+
+4) Run PATs!
+
+```
+./set-and-run-PATs.sh '<your api here>' local-config.yml
+```
+
+5) Collect output - output lands in the output/csvs dir as a procedurally named csv file. This directory cannot tolerate the presence of other files, so if you want to rename your output, move it somewhere else.
+
+## Running Manually
 
 1) Go through the "Setting up PAT to run locally" section
 
@@ -67,43 +73,17 @@ There are three ways to run PAT locally. For all three ways, you must first:
 
     gcf login
 
-### Option 1. Run the source code directly
-1) Change into the top level of this project
+
+3) Change into the top level of this project
 
     cd $GOPATH/src/github.com/cloudfoundry-incubator/pat
 
-2) Execute the command line
+4) Execute the command line
 
     go run main.go -workload=gcf:push
 
-### Option 2. Run the source code through a web interface
 
-1) Change into the top level of this project
-
-    cd $GOPATH/src/github.com/cloudfoundry-incubator/pat
-
-2) Run PAT selecting the HTTP server option
-
-    go run main.go -server
-
-3) Open a browser and go to <http://localhost:8080/ui>
-
-### Option 3. Compile and run a PAT executable
-
-1) Change into the top level of this project
-
-    cd $GOPATH/src/github.com/cloudfoundry-incubator/pat
-    go install
-
-2a) Run the PAT executable in command line mode
-
-    pat -workload=gcf:push
-
-2b) Run the PAT executable in web interface mode
-
-    pat -server
-
-### Example command-line usage (using option 3 to illustrate):
+### Example command-line usage (using a compiled binary from `go build` to illustrate):
 
     pat -h   # will output all of the command line options if installed the recommended way
 
@@ -138,6 +118,7 @@ The following options are available:
 - `rest:login` - performs a login to the REST api. This option requires `rest:target` to be included in the list of workloads.
 - `rest:push` - pushes a simple Ruby application using the REST api. This option requires both `rest:target` and `rest:login` to be included in the list of workloads.
 - `gcf:push` - pushes a simple Ruby application using the CF command-line
+- `gcf:spring` - pushes the spring-music app. The app paramaters can be modified by changing its manifest.yml.
 - `dummy` - an empty workload that can be used when a CF environment is not available.
 - `dummyWithErrors` - an empty workload that generates errors. This can be used when a CF environment is not available.
 
@@ -165,8 +146,7 @@ Pat supports shipping workload to multiple instances using redis. This simple ex
 Using a Configuration file
 =====================================
 PAT offers the ability to configure your command line arguments using a configuration file. There is an example in the root of the project
-directory called config-template.yml. To use your own custom yaml configuration file, provide the full path to the 
-configuration file. Any setting specified as a command line argument overrides the equivalent setting contained in the config file.
+directory called config-template.yml, but I recommend you look at the stripped down local-config.yml instead. To use your own custom yaml configuration file, provide the path to the configuration file. Any setting specified as a command line argument overrides the equivalent setting contained in the config file.
 
 Example:
 
@@ -178,23 +158,6 @@ In the event of an error during execution, the text of the error along with an e
 
     10: Error parsing input
     20: Error in executing the workload
-
-Running PATs as a Cloud Foundry App (In the works, some features might not work)
-===================================
-
-Ensure your Cloud Foundry version is current and running
-
-1) Clone the project if you have not followed the "Setting up PAT to run locally" section
-
-    git clone https://github.com/cloudfoundry-incubator/pat
-
-2) Change into the PAT directory
-
-3) Push the project to Cloud Foundry with our 'go' buildpack that adds gocart support
-
-    cf push -b https://github.com/jberkhahn/cloudfoundry-buildpack-go pat
-
-4) Open the browser and go to the provided URL
 
 Contributing
 ===================================
@@ -215,7 +178,7 @@ should document functionality and provide an example of how to use it.
 
  - *Redis*: e.g. `brew install redis` (using [HomeBrew](https://github.com/Homebrew/homebrew) on OSX)
 
-5) Run all tests within the repository
+5) Run all tests within the repository (note: this hacky fork hasn't actually ever had these tests run, so they might not pass)
 
         ginkgo -r
 
@@ -228,5 +191,5 @@ Known Limitations / TODOs etc.
  - Creates lots of apps, does not delete them. We normally make sure we're targetted at a 'pats' space and just cf delete-space the space after to get rid of everything.
  - Only supports basic operations so far (push via gcf, target + login + push via rest api)
  - GCF workloads assume single already-logged-in-and-targetted user
-
+ - Some of the features in the example configuration just don't work.
 
