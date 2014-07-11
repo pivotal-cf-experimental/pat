@@ -1,0 +1,5 @@
+---
+iterations: 10           # The number of times to iterate over the workload.
+concurrency: 5           # The number of iterations to run concurrently.
+interval: 0              # how long we should wait before each workload is run.
+workload: "gcf:spring"   # A single iteration workload that will be executed in the order commands are provided.
