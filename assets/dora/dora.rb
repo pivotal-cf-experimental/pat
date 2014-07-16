@@ -73,5 +73,10 @@ class Dora < Sinatra::Base
     ENV.to_hash.to_s
   end
 
+  get '/load/:intensity' do
+    iterations = params[:intensity].to_i
+    iterations * iterations.downto(1).inject(:*)
+  end
+
   run! if app_file == $0
 end
