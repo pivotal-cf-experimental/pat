@@ -78,5 +78,13 @@ class Dora < Sinatra::Base
     iterations * iterations.downto(1).inject(:*)
   end
 
+  get '/blendload/:intensity' do
+    intensity = params[:intensity].to_i
+    intensity * intensity.downto(1).inject(:*) # CPU
+    system "cat /dev/urandom | head -c #{intensity}" # File IO
+    thing = Array.new(intensity) # Memory
+    "Did cpu, file, and memory with the dial turned to #{intensity}!"
+  end
+
   run! if app_file == $0
 end
