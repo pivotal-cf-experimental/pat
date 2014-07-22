@@ -8,9 +8,10 @@
 # Exit on error
 set -e
 
-# Take API and config file as an arguments
+# Take API, and config file and test number as arguments
 CF_API=$1
 CONFIG_FILE=$2
+TEST_NUMBER=$3
 
 # create and set random, temporary CF_HOME with an absolute path
 
@@ -29,8 +30,7 @@ cf set-quota PAT-org runaway
 
 # move test results to a human-readable name
 # and put it in ./output to avoid problems w/non-PAT filenames in ./output/csvs
-## DISABLED - probably have to manage this manually until/unless I can figure out a slicker system
-# mv output/csvs/*.csv "output/${CF_API}.csv"
+mv output/csvs/`ls -ut output/csvs | head -1` "output/test-${CF_API}-${TEST_NUMBER}-a.csv"
 
 # clean up test artifacts
 cf delete-space -f PAT-space
