@@ -17,7 +17,7 @@ cf target -s PAT-space
 
 # move latest test results to a human-readable name
 # and put it in ./output to avoid problems w/non-PAT filenames in ./output/csvs
-mv output/csvs/`ls -ut output/csvs | head -1` "output/test-${CF_API}-${TEST_NUMBER}-l.csv"
+# mv output/csvs/`ls -ut output/csvs | head -1` "output/test-${CF_API}-${TEST_NUMBER}-l.csv"
 
 # clean up test artifacts
 cf delete-space -f PAT-space

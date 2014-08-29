@@ -45,7 +45,7 @@ func Push() error {
 func Spring() error {
 	guid, _ := uuid.NewV4()
 	pathToManifest := path.Join("assets", "spring-music", "manifest.yml" ) 
-	err := Cf("push", "patD-"+guid.String(), "-f", pathToManifest).ExpectOutput("App started")
+	err := Cf("push", "patS-"+guid.String(), "-f", pathToManifest).ExpectOutput("App started")
 	return err
 }
 
