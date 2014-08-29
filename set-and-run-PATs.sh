@@ -37,7 +37,7 @@ cf set-quota PAT-org runaway
 
 # move latest test results to a human-readable name
 # and put it in ./output to avoid problems w/non-PAT filenames in ./output/csvs
-mv output/csvs/`ls -ut output/csvs | head -1` "output/test-${CF_API}-${TEST_NUMBER}-a.csv"
+mv output/csvs/`ls -ut output/csvs | head -1` "output/test-${TEST_NUMBER}-a.csv"
 
 # clean up test artifacts... and don't exit if they're already gone
 cf delete-space -f PAT-space || true
